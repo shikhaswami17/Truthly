@@ -1,12 +1,29 @@
+// filepath: /home/shikha17/Documents/Truthly/src/App.tsx
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import TruthlyApp from './components/TruthlyApp';
-import './styles/index.css'; // If you have global styles
+import DynamicResult from './components/DynamicResult';
+import './styles/index.css';
 
 function App() {
   return (
-    <div className="App">
-      <TruthlyApp />
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<TruthlyApp />} />
+        <Route path="/result" element={<DynamicResultWrapper />} />
+      </Routes>
+    </Router>
+  );
+}
+
+// Wrapper to pass props from location state
+import { useLocation, useNavigate } from 'react-router-dom';
+function DynamicResultWrapper() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { searchUrl } = location.state || {};
+  return (
+    <DynamicResult searchUrl={searchUrl} onBack={() => navigate('/')} />
   );
 }
 

@@ -6,6 +6,7 @@ import ExampleResult from './ExampleResult';
 import Features from './Features';
 import FeedbackSection from './FeedbackSection';
 import Footer from './Footer';
+import { useNavigate } from 'react-router-dom';
 
 const TruthlyApp = () => {
   const [newsInput, setNewsInput] = useState('');
@@ -13,18 +14,18 @@ const TruthlyApp = () => {
   const [searchUrl, setSearchUrl] = useState<string | null>(null);
   const [feedbackText, setFeedbackText] = useState('');
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
+  const navigate = useNavigate();
 
-  const handleCheckCredibility = () => {
+    const handleCheckCredibility = () => {
     if (!newsInput.trim()) {
       alert('Please enter a news link to analyze.');
       return;
     }
     setSearchUrl(newsInput.trim());
     setShowResult(true);
-    setTimeout(() => {
-      document.getElementById('resultSection')?.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
+    navigate('/result', { state: { searchUrl: newsInput.trim() } });
   };
+
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
@@ -72,14 +73,9 @@ const TruthlyApp = () => {
         newsInput={newsInput}
         setNewsInput={setNewsInput}
         onKeyPress={handleKeyPress}
-        onCheck={handleCheckCredibility}
+
       />
-      {showResult && searchUrl && (
-        <div id="resultSection">
-          <DynamicResult searchUrl={searchUrl} onBack={() => setShowResult(false)} />
-        </div>
-      )}
-      <ExampleResult />
+    <ExampleResult />
       <Features />
       <FeedbackSection 
         feedbackText={feedbackText}
