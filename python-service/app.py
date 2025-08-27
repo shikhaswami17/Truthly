@@ -1015,11 +1015,7 @@ if __name__ == '__main__':
    
 
     logger.info(f"🌐 Starting Flask server on http://localhost:5001")
-<<<<<<< HEAD
 
     app.run(host='0.0.0.0', port=5001, debug=True)
-                            
-=======
-    app.run(host='0.0.0.0', port=5001, debug=True)
-                            
->>>>>>> 8937d1d (Revert "UI improved")
+
+
