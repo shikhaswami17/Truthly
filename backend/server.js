@@ -9,19 +9,7 @@ const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
-// Add this to your server.js after existing CORS setup
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    res.sendStatus(200);
-  } else {
-    next();
-  }
-});
+
 // Python service configuration
 const PYTHON_SERVICE_URL = 'http://localhost:5001';
 
@@ -202,27 +190,21 @@ async function callOpenAIDirectly(title, content) {
             return { success: false, error: 'OpenAI daily limit reached' };
         }
 
-        console.log(`🤖 Enhanced OpenAI API Call #${openaiCallCount + 1}`);
+        console.log(`🤖 Direct OpenAI API Call #${openaiCallCount + 1}`);
+
         const response = await axios.post('https://api.openai.com/v1/chat/completions', {
             model: 'gpt-3.5-turbo',
             messages: [{
-                role: 'system',
-                content: 'You are an expert fact-checker. Analyze news content thoroughly for credibility. Provide detailed reasoning for your assessment.'
-            }, {
                 role: 'user',
-                content: `Analyze this news for credibility and provide comprehensive reasoning:
+                content: `Analyze this news content for credibility and truthfulness. Respond with a confidence score (0-100) and brief reasoning.
 
-TITLE: ${title}
-CONTENT: ${content.substring(0, 1500)}
+Title: ${title}
+Content: ${content.substring(0, 1000)}
 
-Provide analysis in this format:
-VERDICT: [TRUSTWORTHY/UNTRUSTWORTHY]
-CONFIDENCE: [50-95]
-SUMMARY: [2-3 sentence summary of main claims]
-REASONING: [Detailed explanation of why you labeled it this way, mentioning specific credibility indicators found or missing]`
+Format: VERDICT: [Credible/Not Credible] | CONFIDENCE: [0-100]% | REASON: [brief explanation]`
             }],
             temperature: 0.1,
-            max_tokens: 400
+            max_tokens: 200
         }, {
             headers: {
                 'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
@@ -232,47 +214,31 @@ REASONING: [Detailed explanation of why you labeled it this way, mentioning spec
         });
 
         openaiCallCount++;
+
         const result = response.data.choices[0].message.content;
         
-        // Enhanced parsing with fallbacks
-        const verdictMatch = result.match(/VERDICT:\s*(TRUSTWORTHY|UNTRUSTWORTHY)/i);
-        const confidenceMatch = result.match(/CONFIDENCE:\s*(\d+)/i);
-        const summaryMatch = result.match(/SUMMARY:\s*([^\n]+(?:\n[^\n]+)*?)(?=\nREASONING:|$)/s);
-        const reasoningMatch = result.match(/REASONING:\s*([^\n]+(?:\n[^\n]+)*?)$/s);
-
-        // Safe extraction with fallbacks
-        const isCredible = verdictMatch ? verdictMatch[1].toUpperCase() === 'TRUSTWORTHY' : 
-                          (result.toLowerCase().includes('trustworthy') && !result.toLowerCase().includes('untrustworthy'));
-        const confidence = confidenceMatch ? Math.max(50, Math.min(95, parseInt(confidenceMatch[1]))) : 70;
-        
-        let summary = '';
-        if (summaryMatch && summaryMatch[1].trim().length > 20) {
-            summary = summaryMatch[1].trim();
-        } else {
-            // Generate fallback summary
-            summary = `Analysis of "${title}": ${content.substring(0, 100)}...`;
-        }
-
-        const reasoning = reasoningMatch ? reasoningMatch[1].trim() : 
-                         `OpenAI analysis: ${result.substring(0, 200)}`;
+        // Parse result
+        const isCredible = result.toLowerCase().includes('credible') && !result.toLowerCase().includes('not credible');
+        const confidenceMatch = result.match(/CONFIDENCE:\s*(\d+)/);
+        const confidence = confidenceMatch ? parseInt(confidenceMatch[1]) : 70;
 
         return {
             success: true,
             analysis: {
                 label: isCredible ? 'Trustworthy' : 'Untrustworthy',
                 confidence: confidence,
-                summary: summary,
-                reasoning: `OpenAI Enhanced Analysis: ${reasoning}`,
-                provider: 'OpenAI-Enhanced',
+                reasoning: `OpenAI analysis: ${result.substring(0, 200)}`,
+                provider: 'OpenAI-Direct',
                 apiCallsUsed: openaiCallCount
             }
         };
+
     } catch (error) {
-        console.error('OpenAI enhanced API error:', error.message);
+        console.error('OpenAI direct API error:', error.message);
         return {
             success: false,
             error: error.message,
-            provider: 'OpenAI-Enhanced'
+            provider: 'OpenAI-Direct'
         };
     }
 }
@@ -746,45 +712,20 @@ async function extractTextFromUrl(url) {
         throw new Error(`Failed to extract text from URL: ${error.message}`);
     }
 }
-// Emergency fallback when all APIs fail
-function emergencyFallbackAnalysis(title, content) {
-    console.log('🚨 Using emergency fallback analysis...');
+
+// Helper function to generate summary
+function generateSummary(content) {
+    const sentences = content
+        .split(/[.!?]+/)
+        .map(s => s.trim())
+        .filter(s => s.length > 20 && s.length < 200)
+        .filter(s => !s.match(/^(Advertisement|Sponsored|By |Follow |Share |Read more)/i));
     
-    const contentLower = content.toLowerCase();
-    const titleLower = title.toLowerCase();
-    
-    // Basic credibility scoring
-    const trustKeywords = ['official', 'announced', 'confirmed', 'statement', 'un ', 'government', 'ministry'];
-    const suspiciousKeywords = ['shocking', 'unbelievable', 'secret', 'conspiracy', 'exposed'];
-    
-    const trustScore = trustKeywords.filter(word => contentLower.includes(word) || titleLower.includes(word)).length;
-    const suspicionScore = suspiciousKeywords.filter(word => contentLower.includes(word) || titleLower.includes(word)).length;
-    
-    const isFromUN = titleLower.includes('un ') || contentLower.includes('united nations');
-    const hasOfficialMarkers = trustScore > 0;
-    
-    const isTrustworthy = (trustScore > suspicionScore) || isFromUN || hasOfficialMarkers;
-    const confidence = Math.min(85, Math.max(55, 60 + (trustScore * 10) - (suspicionScore * 5)));
-    
-    // Generate summary
-    const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 20);
-    const summary = sentences.length > 0 ? 
-        `Summary: ${sentences.slice(0, 2).join('. ').trim()}.` : 
-        `Emergency analysis of "${title}" content.`;
-    
-    const reasoning = `Emergency fallback analysis: Found ${trustScore} trust indicators, ${suspicionScore} suspicious elements. ${isFromUN ? 'UN source detected. ' : ''}Content assessment based on keyword analysis.`;
-    
-    return {
-        label: isTrustworthy ? 'Trustworthy' : 'Untrustworthy',
-        confidence: confidence,
-        summary: summary,
-        reasoning: reasoning,
-        provider: 'Emergency-Fallback',
-        emergency_mode: true
-    };
+    const topSentences = sentences.slice(0, 3);
+    return topSentences.length > 0 
+        ? topSentences.join('. ') + '.'
+        : 'Summary not available for this content.';
 }
-
-
 
 function generateVerificationReasoning(trustedCount, totalCount) {
     const percentage = Math.round((trustedCount / Math.max(totalCount, 1)) * 100);
@@ -922,35 +863,27 @@ app.post('/api/analyze', async (req, res) => {
         }
         
         // BACKUP: Direct API calls if Python service fails
-        // BACKUP: Direct API calls if Python service fails
-let backupAnalyses = [];
-if (!pythonAnalysis) {
-    console.log('🔄 Python service unavailable, using backup direct API calls...');
-    
-    // Try OpenAI directly
-    const openaiResult = await callOpenAIDirectly(analysisData.title, analysisData.content);
-    if (openaiResult && openaiResult.success && openaiResult.analysis) {
-        backupAnalyses.push(openaiResult.analysis);
-        console.log(`✅ OpenAI backup: ${openaiResult.analysis.label} (${openaiResult.analysis.confidence}%)`);
-    }
-
-    // Try Groq directly
-    const groqResult = await callGroqDirectly(analysisData.title, analysisData.content);
-    if (groqResult && groqResult.success && groqResult.analysis) {
-        backupAnalyses.push(groqResult.analysis);
-        console.log(`✅ Groq backup: ${groqResult.analysis.label} (${groqResult.analysis.confidence}%)`);
-    }
-
-    // Try LLaMA directly
-    const llamaResult = await analyzeWithLLaMAComprehensive(analysisData.title, analysisData.content);
-    if (llamaResult && llamaResult.success && llamaResult.analysis) {
-        backupAnalyses.push(llamaResult.analysis);
-        console.log(`✅ LLaMA backup: ${llamaResult.analysis.label} (${llamaResult.analysis.confidence}%)`);
-    }
-
-    console.log(`🔧 Backup analysis complete: ${backupAnalyses.length} models responded`);
+        let backupAnalyses = [];
+        if (!pythonAnalysis) {
+            console.log('🔄 Python service unavailable, using backup direct API calls...');
+            
+            // Try OpenAI directly
+            const openaiResult = await callOpenAIDirectly(analysisData.title, analysisData.content);
+            if (openaiResult.success) {
+                backupAnalyses.push(openaiResult.analysis);
+            }
+            
+            // Try Groq directly
+            const groqResult = await callGroqDirectly(analysisData.title, analysisData.content);
+            if (groqResult.success) {
+                backupAnalyses.push(groqResult.analysis);
+            }
+            // Try LLaMA directly
+            const llamaResult = await analyzeWithLLaMAComprehensive(analysisData.title, analysisData.content);
+            if (llamaResult) {
+                backupAnalyses.push(llamaResult.analysis);
+            }
 }
-
         
         
         // Enhanced trusted source and government content adjustment
@@ -967,51 +900,42 @@ if (!pythonAnalysis) {
         const hasGovernmentContent = analysisData.extractionInfo?.hasGovernmentContent;
         
         // Use Python analysis if available, otherwise use backup
-// Use Python analysis if available, otherwise use backup
-        // Use Python analysis if available, otherwise use backup
-let finalAnalysis;
-if (pythonAnalysis && pythonAnalysis.summary && pythonAnalysis.reasoning) {
-    finalAnalysis = pythonAnalysis;
-    console.log(`✅ Using Python comprehensive analysis with ${pythonAnalysis.summary.length}-char summary`);
-} else if (backupAnalyses.length > 0) {
-    console.log(`🔧 Creating ensemble from ${backupAnalyses.length} backup analyses...`);
-    
-    // Create ensemble from backup analyses
-    const realVotes = backupAnalyses.filter(a => a.label === 'Trustworthy').length;
-    const fakeVotes = backupAnalyses.filter(a => a.label === 'Untrustworthy').length;
-    const avgConfidence = backupAnalyses.reduce((sum, a) => sum + a.confidence, 0) / backupAnalyses.length;
-    
-    // Find best summary from backup analyses
-    const bestSummary = backupAnalyses.find(a => a.summary && a.summary.length > 50)?.summary;
-    
-    finalAnalysis = {
-        label: realVotes > fakeVotes ? 'Trustworthy' : 'Untrustworthy',
-        confidence: Math.round(avgConfidence),
-        summary: bestSummary || `Analysis of "${analysisData.title}": ${analysisData.content.substring(0, 150)}...`,
-        reasoning: `Backup ensemble analysis using ${backupAnalyses.length} APIs: ${backupAnalyses.map(a => `${a.provider} (${a.confidence}%)`).join(', ')}`,
-        real_probability: (realVotes / backupAnalyses.length) * 100,
-        fake_probability: (fakeVotes / backupAnalyses.length) * 100,
-        ensemble_details: {
-            backup_mode: true,
-            api_models_used: backupAnalyses.length,
-            local_models_used: 0,
-            predictions: backupAnalyses
+        let finalAnalysis;
+        if (pythonAnalysis) {
+            finalAnalysis = pythonAnalysis;
+            
+            // Apply trusted source adjustments
+            if (isFromTrustedSource && finalAnalysis.confidence > 75 && finalAnalysis.label === 'Untrustworthy') {
+                if (hasGovernmentContent) {
+                    finalAnalysis.confidence = Math.min(finalAnalysis.confidence, 60);
+                    finalAnalysis.reasoning = `Government announcement from trusted source. ${finalAnalysis.reasoning} (Confidence adjusted due to trusted government source)`;
+                } else {
+                    finalAnalysis.confidence = Math.min(finalAnalysis.confidence, 70);
+                    finalAnalysis.reasoning += ' (Confidence adjusted due to trusted source)';
+                }
+            }
+        } else if (backupAnalyses.length > 0) {
+            // Create ensemble from backup analyses
+            const realVotes = backupAnalyses.filter(a => a.label === 'Trustworthy').length;
+            const fakeVotes = backupAnalyses.filter(a => a.label === 'Untrustworthy').length;
+            const avgConfidence = backupAnalyses.reduce((sum, a) => sum + a.confidence, 0) / backupAnalyses.length;
+            
+            finalAnalysis = {
+                label: realVotes > fakeVotes ? 'Trustworthy' : 'Untrustworthy',
+                confidence: Math.round(avgConfidence),
+                reasoning: `Backup analysis using ${backupAnalyses.length} direct API calls: ${backupAnalyses.map(a => a.provider).join(', ')}`,
+                real_probability: (realVotes / backupAnalyses.length) * 100,
+                fake_probability: (fakeVotes / backupAnalyses.length) * 100,
+                ensemble_details: {
+                    backup_mode: true,
+                    api_models_used: backupAnalyses.length,
+                    local_models_used: 0,
+                    predictions: backupAnalyses
+                }
+            };
+        } else {
+            throw new Error('All analysis services are currently unavailable');
         }
-    };
-} else {
-    console.log('🚨 All services failed, using emergency fallback...');
-    finalAnalysis = emergencyFallbackAnalysis(analysisData.title, analysisData.content);
-}
-
-// Ensure we have required properties
-if (!finalAnalysis.summary) {
-    finalAnalysis.summary = `Analysis of "${analysisData.title}": ${analysisData.content.substring(0, 100)}...`;
-}
-if (!finalAnalysis.reasoning) {
-    finalAnalysis.reasoning = 'Analysis completed with limited information due to service constraints.';
-}
-
-
         
         // Optional web verification for additional context
         let webVerification = null;
@@ -1044,12 +968,12 @@ if (!finalAnalysis.reasoning) {
         const result = {
             success: true,
             data: {
-            title: analysisData.title,
-            url: analysisData.originalUrl || null,
-            label: finalAnalysis.label,
-            confidence: finalAnalysis.confidence,
-            summary: finalAnalysis.summary, // ✅ USE PYTHON'S SUMMARY
-            reasoning: finalAnalysis.reasoning,
+                title: analysisData.title,
+                url: analysisData.originalUrl || null,
+                label: finalAnalysis.label,
+                confidence: finalAnalysis.confidence,
+                summary: generateSummary(analysisData.content),
+                reasoning: finalAnalysis.reasoning,
                 probabilities: {
                     fake: finalAnalysis.fake_probability || (100 - finalAnalysis.confidence),
                     real: finalAnalysis.real_probability || finalAnalysis.confidence
@@ -1175,30 +1099,13 @@ app.get('/api/health', async (req, res) => {
         const apis = validateAllAPIs();
         
         // Check Python service
-        // REPLACE the Python service call section:
-        let pythonAnalysis = null;
+        let pythonHealth = null;
         try {
-            console.log('📡 Calling Python comprehensive ensemble service...');
-            const pythonResponse = await axios.post(`${PYTHON_SERVICE_URL}/analyze`, {
-                title: analysisData.title,
-                content: analysisData.content
-            }, {
-                timeout: 45000
-            });
-            
-            if (pythonResponse.data.success) {
-                pythonAnalysis = pythonResponse.data.analysis;
-                console.log(`✅ Python service: ${pythonAnalysis.label} (${pythonAnalysis.confidence}%)`);
-                
-                // ✅ ENSURE we use Python's comprehensive data
-                if (!pythonAnalysis.summary || pythonAnalysis.summary.length < 50) {
-                    console.warn('⚠️ Python summary too short, keeping as is but flagging');
-                }
-            }
+            const pythonResponse = await axios.get(`${PYTHON_SERVICE_URL}/health`, { timeout: 5000 });
+            pythonHealth = pythonResponse.data;
         } catch (pythonError) {
-            console.error('❌ Python service error:', pythonError.message);
+            pythonHealth = { status: 'unavailable', error: pythonError.message };
         }
-
         
         res.json({
             backend: 'healthy',

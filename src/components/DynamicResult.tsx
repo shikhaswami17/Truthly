@@ -1,11 +1,14 @@
+// filepath: /home/shikha17/Documents/Truthly/src/components/DynamicResult.tsx
 import React, { useState, useEffect } from 'react';
-import { 
-  CheckCircle, XCircle, AlertTriangle, ExternalLink, ThumbsUp, ThumbsDown, 
-  Brain, Target, FileText, Activity, Server, Clock, TrendingUp, Zap, Users
+import {
+  CheckCircle, XCircle, AlertTriangle, ExternalLink, ThumbsUp, ThumbsDown,
+  Brain, Target, FileText, Activity, Server, Clock, TrendingUp, Zap, Users,
+  ArrowLeft, Shield, Search
 } from 'lucide-react';
 import LoadingState from './LoadingState';
 import CustomFeedbackSection from './CustomFeedbackSection';
 
+// Keep all your existing interfaces unchanged
 interface APIFlags {
   model_loaded: boolean;
   text_processed: boolean;
@@ -90,25 +93,19 @@ const DynamicResult: React.FC<DynamicResultProps> = ({ searchUrl, onBack }) => {
   const [showFeedback, setShowFeedback] = useState(false);
   const [systemHealth, setSystemHealth] = useState<SystemHealth | null>(null);
   const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
-  const [lastAnalyzedUrl, setLastAnalyzedUrl] = useState<string | null>(null); // Add this
+  const [lastAnalyzedUrl, setLastAnalyzedUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    
-    // Prevent duplicate analysis of same URL
     if (searchUrl !== lastAnalyzedUrl) {
       analyzeUrl();
       fetchSystemHealth();
       setLastAnalyzedUrl(searchUrl);
     }
-  }, [searchUrl, lastAnalyzedUrl]); // Add lastAnalyzedUrl dependency
-
-  // Rest of your component stays the same...
-
+  }, [searchUrl, lastAnalyzedUrl]);
 
   const analyzeUrl = async () => {
     setLoading(true);
     setError(null);
-    
     try {
       const response = await fetch('http://localhost:5000/api/analyze', {
         method: 'POST',
@@ -171,10 +168,10 @@ const DynamicResult: React.FC<DynamicResultProps> = ({ searchUrl, onBack }) => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'healthy': return 'text-green-400';
-      case 'processing': return 'text-yellow-400';
-      case 'loading': return 'text-blue-400';
-      case 'failed': return 'text-red-400';
+      case 'healthy': return 'text-teal-500';
+      case 'processing': return 'text-yellow-500';
+      case 'loading': return 'text-blue-500';
+      case 'failed': return 'text-red-500';
       default: return 'text-gray-400';
     }
   };
@@ -182,8 +179,8 @@ const DynamicResult: React.FC<DynamicResultProps> = ({ searchUrl, onBack }) => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'healthy': return <CheckCircle className="h-4 w-4" />;
-      case 'processing': return <Activity className="h-4 w-4 animate-pulse" />;
-      case 'loading': return <Clock className="h-4 w-4 animate-spin" />;
+      case 'processing': return <Activity className="h-4 w-4" />;
+      case 'loading': return <Clock className="h-4 w-4" />;
       case 'failed': return <XCircle className="h-4 w-4" />;
       default: return <AlertTriangle className="h-4 w-4" />;
     }
@@ -195,28 +192,17 @@ const DynamicResult: React.FC<DynamicResultProps> = ({ searchUrl, onBack }) => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900 py-12">
-        <div className="container mx-auto px-4">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
+          <XCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Analysis Failed</h2>
+          <p className="text-gray-600 mb-6">{error}</p>
           <button
             onClick={onBack}
-            className="mb-6 px-6 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-all duration-300 backdrop-blur-sm"
+            className="bg-teal-600 text-white px-6 py-2 rounded-lg hover:bg-teal-700 transition-colors"
           >
-            ← Back to Search
+            Try Again
           </button>
-          
-          <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 border border-white/20">
-            <div className="text-center">
-              <AlertTriangle className="mx-auto h-16 w-16 text-red-400 mb-4" />
-              <h2 className="text-2xl font-bold text-white mb-4">Analysis Failed</h2>
-              <p className="text-gray-300 mb-6">{error}</p>
-              <button
-                onClick={analyzeUrl}
-                className="px-6 py-3 bg-gradient-to-r from-purple-600 to-violet-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-violet-700 transition-all duration-300"
-              >
-                Try Again
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     );
@@ -225,174 +211,152 @@ const DynamicResult: React.FC<DynamicResultProps> = ({ searchUrl, onBack }) => {
   if (!result) return null;
 
   const isTrustworthy = result.label === 'Trustworthy';
-  const confidenceColor = result.confidence >= 80 ? 'text-green-400' : 
-                         result.confidence >= 60 ? 'text-yellow-400' : 'text-red-400';
-
+  const confidenceColor = result.confidence >= 80 ? 'text-green-600' :
+                          result.confidence >= 60 ? 'text-yellow-600' : 'text-red-600';
   const hasSummary = result.summary && result.summary !== 'Summary not available for this content.' && result.summary.length > 10;
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900 py-12">
-      <div className="container mx-auto px-4 max-w-4xl">
-        <button
-          onClick={onBack}
-          className="mb-6 px-6 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-all duration-300 backdrop-blur-sm"
-        >
-          ← Back to Search
-        </button>
+  // Muted color scheme
+  const cardBgColor = isTrustworthy ? 'bg-green-50' : 'bg-red-50';
+  const borderColor = isTrustworthy ? 'border-green-200' : 'border-red-200';
+  const textColor = isTrustworthy ? 'text-green-800' : 'text-red-800';
+  const badgeBg = isTrustworthy ? 'bg-green-100' : 'bg-red-100';
+  const badgeText = isTrustworthy ? 'text-green-800' : 'text-red-800';
+  const iconColor = isTrustworthy ? 'text-green-600' : 'text-red-600';
 
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center space-x-4">
+              <button 
+                onClick={onBack}
+                className="flex items-center space-x-2 text-gray-600 hover:text-teal-600 transition-colors"
+              >
+                <ArrowLeft className="h-5 w-5" />
+                <span>Back to Search</span>
+              </button>
+            </div>
+            
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-teal-600 rounded-lg flex items-center justify-center">
+                <Shield className="h-5 w-5 text-white" />
+              </div>
+              <span className="text-xl font-bold text-gray-900">Truthly</span>
+            </div>
+
+            <div className="w-24"> {/* Spacer for centering */}</div>
+          </div>
+        </div>
+      </header>
+
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* System Status Banner */}
         {systemHealth && (
-          <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20 mb-6">
+          <div className="mb-6 p-4 bg-white rounded-lg border border-gray-200">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <Server className="h-5 w-5 text-blue-400" />
-                  <span className="text-white font-medium">System Status:</span>
-                  <span className={`font-bold ${getStatusColor(systemHealth.status)}`}>
-                    {systemHealth.status.toUpperCase()}
-                  </span>
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <div className={getStatusColor(systemHealth.status)}>
+                    {getStatusIcon(systemHealth.status)}
+                  </div>
+                  <span className="font-medium">System Status: {systemHealth.status.toUpperCase()}</span>
                 </div>
                 {systemHealth.uptime && (
-                  <div className="flex items-center gap-2 text-sm text-gray-400">
-                    <Clock className="h-4 w-4" />
-                    <span>Uptime: {systemHealth.uptime}</span>
-                  </div>
+                  <span className="text-sm text-gray-500">Uptime: {systemHealth.uptime}</span>
                 )}
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center space-x-4 text-sm text-gray-500">
                 {systemHealth.success_rate !== undefined && (
-                  <div className="text-sm text-gray-400">
-                    <TrendingUp className="h-4 w-4 inline mr-1" />
-                    Success Rate: <span className="text-green-400 font-bold">{systemHealth.success_rate}%</span>
-                  </div>
-                )}
-                {systemHealth.total_requests !== undefined && (
-                  <div className="text-sm text-gray-400">
-                    Total Requests: <span className="text-blue-400 font-bold">{systemHealth.total_requests}</span>
-                  </div>
+                  <span>Success Rate: {systemHealth.success_rate}%</span>
                 )}
                 {systemHealth.ensemble_info && (
-                  <div className="text-sm text-gray-400">
-                    Models: <span className="text-purple-400 font-bold">{systemHealth.ensemble_info.total_loaded}</span>
-                  </div>
+                  <span>Models: {systemHealth.ensemble_info.total_loaded}</span>
                 )}
               </div>
             </div>
           </div>
         )}
 
-        {/* Main Result Card */}
-        <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 border border-white/20 mb-8">
-          <div className="flex items-start justify-between mb-6">
-            <div className="flex-1">
-              <h1 className="text-2xl font-bold text-white mb-2">{result.title}</h1>
-              {result.url && (
-                <a 
-                  href={result.url} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-blue-300 hover:text-blue-200 flex items-center gap-2 mb-4"
-                >
-                  {result.url}
-                  <ExternalLink className="h-4 w-4" />
-                </a>
-              )}
-            </div>
+        {/* Main Result Card with Muted Colors */}
+        <div className={`${cardBgColor} ${borderColor} border rounded-xl p-8 mb-6`}>
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">{result.title}</h1>
+            {result.url && (
+              <a
+                href={result.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-teal-600 hover:text-teal-800 text-sm flex items-center space-x-1"
+              >
+                <span>{result.url}</span>
+                <ExternalLink className="h-4 w-4" />
+              </a>
+            )}
           </div>
 
-          {/* Enhanced Status Display */}
-          <div className="flex items-center gap-4 mb-6 flex-wrap">
-            <div className={`flex items-center gap-2 px-4 py-2 rounded-xl ${
-              isTrustworthy 
-                ? 'bg-green-500/20 border border-green-500/30' 
-                : 'bg-red-500/20 border border-red-500/30'
-            }`}>
+          {/* Status Display with Muted Colors */}
+          <div className="flex items-center justify-between mb-6">
+            <div className={`flex items-center space-x-3 px-4 py-3 ${badgeBg} rounded-xl`}>
               {isTrustworthy ? (
-                <CheckCircle className="h-6 w-6 text-green-400" />
+                <CheckCircle className={`h-6 w-6 ${iconColor}`} />
               ) : (
-                <XCircle className="h-6 w-6 text-red-400" />
+                <XCircle className={`h-6 w-6 ${iconColor}`} />
               )}
-              <span className={`font-bold text-lg ${
-                isTrustworthy ? 'text-green-300' : 'text-red-300'
-              }`}>
-                {result.label}
-              </span>
+              <span className={`text-lg font-semibold ${badgeText}`}>{result.label}</span>
             </div>
             
-            <div className="flex items-center gap-2">
-              <Target className="h-5 w-5 text-gray-400" />
-              <span className="text-gray-300">Confidence:</span>
-              <span className={`font-bold text-lg ${confidenceColor}`}>
-                {result.confidence}%
-              </span>
-            </div>
-
-            {result.probabilities && (
-              <div className="flex items-center gap-2 text-sm">
-                <Brain className="h-4 w-4 text-purple-400" />
-                <span className="text-gray-400">
+            <div className="text-right">
+              <div className="flex items-center space-x-2 mb-1">
+                <span className="text-sm text-gray-600">Confidence:</span>
+                <span className={`text-xl font-bold ${confidenceColor}`}>{result.confidence}%</span>
+              </div>
+              {result.probabilities && (
+                <div className="text-sm text-gray-500">
                   Real: {result.probabilities.real}% | Fake: {result.probabilities.fake}%
-                </span>
-              </div>
-            )}
-
-            {result.processing_time && (
-              <div className="flex items-center gap-2 text-sm">
-                <Zap className="h-4 w-4 text-yellow-400" />
-                <span className="text-gray-400">
+                </div>
+              )}
+              {result.processing_time && (
+                <div className="text-sm text-gray-500">
                   Processed in {result.processing_time}s
-                </span>
-              </div>
-            )}
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Multi-Model Ensemble Details - MOVED TO CORRECT LOCATION */}
+          {/* Multi-Model Ensemble Details */}
           {result.ensemble_details && (
-            <div className="bg-gray-800/50 rounded-lg p-4 mb-6">
-              <h4 className="text-sm font-medium text-white mb-3 flex items-center gap-2">
-                <Users className="h-4 w-4" />
+            <div className="mb-6 p-4 bg-white/50 rounded-lg border border-gray-200">
+              <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
+                <Brain className="h-5 w-5 mr-2 text-teal-600" />
                 Multi-Model Ensemble ({result.ensemble_details.active_predictions} Models Active)
-              </h4>
-              
-              <div className="mb-4">
-                <div className="flex items-center gap-4 mb-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                    <span className="text-green-300 text-sm">Trustworthy: {result.ensemble_details.model_votes.real}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                    <span className="text-red-300 text-sm">Suspicious: {result.ensemble_details.model_votes.fake}</span>
-                  </div>
+              </h3>
+              <div className="flex items-center space-x-6 mb-4">
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <span className="text-sm">Trustworthy: {result.ensemble_details.model_votes.real}</span>
                 </div>
-                
-                <div className="w-full bg-gray-700 rounded-full h-2">
-                  <div 
-                    className="bg-green-500 h-2 rounded-full transition-all duration-1000" 
-                    style={{
-                      width: `${(result.ensemble_details.model_votes.real / (result.ensemble_details.model_votes.real + result.ensemble_details.model_votes.fake)) * 100}%`
-                    }}
-                  ></div>
+                <div className="flex items-center space-x-2">
+                  <XCircle className="h-4 w-4 text-red-600" />
+                  <span className="text-sm">Suspicious: {result.ensemble_details.model_votes.fake}</span>
                 </div>
               </div>
-
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {result.ensemble_details.predictions.map((prediction, index) => (
-                  <div key={index} className="bg-white/5 rounded p-3">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="font-medium text-white text-sm">{prediction.model}</span>
-                      <div className="flex items-center gap-2">
-                        <span className={`px-2 py-1 rounded text-xs font-bold ${
-                          prediction.label === 'Real' 
-                            ? 'bg-green-500/30 text-green-300' 
-                            : 'bg-red-500/30 text-red-300'
+                  <div key={index} className="p-3 bg-white rounded-lg border border-gray-100">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-medium text-gray-900">{prediction.model}</span>
+                      <div className="flex items-center space-x-2">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          prediction.label === 'Trustworthy' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                         }`}>
                           {prediction.label}
                         </span>
-                        <span className="text-gray-400 text-xs">{prediction.confidence}%</span>
+                        <span className="text-sm font-medium">{prediction.confidence}%</span>
                       </div>
                     </div>
-                    <p className="text-gray-400 text-xs">{prediction.reasoning}</p>
+                    <p className="text-sm text-gray-600">{prediction.reasoning}</p>
                   </div>
                 ))}
               </div>
@@ -401,99 +365,91 @@ const DynamicResult: React.FC<DynamicResultProps> = ({ searchUrl, onBack }) => {
 
           {/* API Status Flags */}
           {result.api_flags && (
-            <div className="bg-gray-800/50 rounded-lg p-4 mb-6">
-              <h4 className="text-sm font-medium text-white mb-3 flex items-center gap-2">
-                <Activity className="h-4 w-4" />
+            <div className="mb-6 p-4 bg-white/50 rounded-lg border border-gray-200">
+              <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
+                <Server className="h-5 w-5 mr-2 text-teal-600" />
                 API Status Flags
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div className="flex items-center gap-2">
-                  {getStatusIcon(result.api_flags.model_loaded ? 'healthy' : 'failed')}
-                  <span className={`text-sm ${result.api_flags.model_loaded ? 'text-green-400' : 'text-red-400'}`}>
-                    Model Loaded
-                  </span>
+              </h3>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="flex items-center space-x-2">
+                  <div className={getStatusColor(result.api_flags.model_loaded ? 'healthy' : 'failed')}>
+                    {getStatusIcon(result.api_flags.model_loaded ? 'healthy' : 'failed')}
+                  </div>
+                  <span className="text-sm">Model Loaded</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  {getStatusIcon(result.api_flags.text_processed ? 'healthy' : 'failed')}
-                  <span className={`text-sm ${result.api_flags.text_processed ? 'text-green-400' : 'text-red-400'}`}>
-                    Text Processed
-                  </span>
+                <div className="flex items-center space-x-2">
+                  <div className={getStatusColor(result.api_flags.text_processed ? 'healthy' : 'failed')}>
+                    {getStatusIcon(result.api_flags.text_processed ? 'healthy' : 'failed')}
+                  </div>
+                  <span className="text-sm">Text Processed</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  {getStatusIcon(result.api_flags.inference_successful ? 'healthy' : 'failed')}
-                  <span className={`text-sm ${result.api_flags.inference_successful ? 'text-green-400' : 'text-red-400'}`}>
-                    Inference Complete
-                  </span>
+                <div className="flex items-center space-x-2">
+                  <div className={getStatusColor(result.api_flags.inference_successful ? 'healthy' : 'failed')}>
+                    {getStatusIcon(result.api_flags.inference_successful ? 'healthy' : 'failed')}
+                  </div>
+                  <span className="text-sm">Inference Complete</span>
                 </div>
               </div>
             </div>
           )}
 
           {/* AI Model Info */}
-          <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3 mb-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-purple-300">
-                <Brain className="h-4 w-4" />
-                <span className="text-sm font-medium">
-                  Analyzed by: {result.model || 'AI Model'}
-                  {result.ensemble_details && ` (${result.ensemble_details.total_models} models)`}
-                </span>
-              </div>
+          <div className="mb-6 p-4 bg-white/50 rounded-lg border border-gray-200">
+            <h3 className="font-semibold text-gray-900 mb-2 flex items-center">
+              <Brain className="h-5 w-5 mr-2 text-teal-600" />
+              AI Analysis Details
+            </h3>
+            <div className="text-sm text-gray-600">
+              <p>Analyzed by: {result.model || 'AI Model'}
+                {result.ensemble_details && ` (${result.ensemble_details.total_models} models)`}
+              </p>
               {result.tracking_info && (
-                <div className="text-xs text-gray-400">
-                  Request ID: #{result.tracking_info.request_id}
-                </div>
+                <p>Request ID: #{result.tracking_info.request_id}</p>
               )}
             </div>
           </div>
+        </div>
 
-          {/* Summary */}
-          {hasSummary && (
-            <div className="mb-6">
-              <h3 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
-                <FileText className="h-5 w-5 text-blue-400" />
-                Content Summary
-              </h3>
-              <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
-                <p className="text-gray-300 leading-relaxed">
-                  {result.summary}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Reasoning */}
-          <div className="mb-6">
-            <h3 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
-              <Brain className="h-5 w-5 text-green-400" />
-              AI Analysis
+        {/* Summary Section */}
+        {hasSummary && (
+          <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+            <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
+              <FileText className="h-5 w-5 mr-2 text-teal-600" />
+              Content Summary
             </h3>
-            <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
-              <p className="text-gray-300 leading-relaxed">
-                {result.reasoning}
-              </p>
-            </div>
+            <p className="text-gray-700 leading-relaxed">{result.summary}</p>
           </div>
+        )}
 
-          {/* Feedback Buttons */}
-          <div className="flex items-center gap-4 pt-6 border-t border-white/10">
-            <span className="text-gray-300">Was this analysis helpful?</span>
+        {/* Reasoning Section */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+          <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
+            <Target className="h-5 w-5 mr-2 text-teal-600" />
+            AI Analysis
+          </h3>
+          <p className="text-gray-700 leading-relaxed">{result.reasoning}</p>
+        </div>
+
+        {/* Feedback Buttons */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+          <h3 className="font-semibold text-gray-900 mb-4">Was this analysis helpful?</h3>
+          <div className="flex items-center space-x-4">
             <button
               onClick={() => {
                 handleFeedback('agree');
                 setShowFeedback(false);
               }}
-              className="flex items-center gap-2 px-4 py-2 bg-green-500/20 hover:bg-green-500/30 text-green-300 rounded-lg transition-all duration-300"
+              className="flex items-center space-x-2 px-4 py-2 bg-green-100 hover:bg-green-200 text-green-800 rounded-lg transition-all duration-300"
             >
               <ThumbsUp className="h-4 w-4" />
-              Yes
+              <span>Yes</span>
             </button>
             <button
               onClick={() => setShowFeedback(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg transition-all duration-300"
+              className="flex items-center space-x-2 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-800 rounded-lg transition-all duration-300"
             >
               <ThumbsDown className="h-4 w-4" />
-              No
+              <span>No</span>
             </button>
           </div>
         </div>
@@ -510,85 +466,72 @@ const DynamicResult: React.FC<DynamicResultProps> = ({ searchUrl, onBack }) => {
         )}
 
         {/* Technical Details */}
-        <div className="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/10">
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-              <Server className="h-5 w-5" />
-              Technical Details
-            </h3>
+            <h3 className="font-semibold text-gray-900">Technical Details</h3>
             <button
               onClick={() => setShowTechnicalDetails(!showTechnicalDetails)}
-              className="text-sm px-3 py-1 bg-white/10 text-gray-300 rounded hover:bg-white/20 transition-all duration-300"
+              className="text-sm px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-all duration-300"
             >
               {showTechnicalDetails ? 'Hide' : 'Show'} Details
             </button>
           </div>
-          
+
           {showTechnicalDetails && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Analyzed at:</span>
-                    <span className="text-gray-300">{new Date(result.analyzedAt).toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Source:</span>
-                    <span className="text-gray-300 capitalize">{result.source}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Model:</span>
-                    <span className="text-gray-300">{result.model}</span>
-                  </div>
+            <div className="space-y-3 text-sm">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <span className="font-medium text-gray-900">Analyzed at:</span>
+                  <p className="text-gray-600">{new Date(result.analyzedAt).toLocaleString()}</p>
                 </div>
-                <div className="space-y-2">
-                  {result.processing_time && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Processing time:</span>
-                      <span className="text-gray-300">{result.processing_time}s</span>
-                    </div>
-                  )}
-                  {result.tracking_info && (
-                    <>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Request ID:</span>
-                        <span className="text-gray-300">#{result.tracking_info.request_id}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Processing node:</span>
-                        <span className="text-gray-300">{result.tracking_info.processing_node}</span>
-                      </div>
-                    </>
-                  )}
-                  {result.probabilities && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Raw Probabilities:</span>
-                      <span className="text-gray-300">
-                        Real: {result.probabilities.real}%, Fake: {result.probabilities.fake}%
-                      </span>
-                    </div>
-                  )}
+                <div>
+                  <span className="font-medium text-gray-900">Source:</span>
+                  <p className="text-gray-600">{result.source}</p>
                 </div>
+                <div>
+                  <span className="font-medium text-gray-900">Model:</span>
+                  <p className="text-gray-600">{result.model}</p>
+                </div>
+                {result.processing_time && (
+                  <div>
+                    <span className="font-medium text-gray-900">Processing time:</span>
+                    <p className="text-gray-600">{result.processing_time}s</p>
+                  </div>
+                )}
               </div>
-              
+
+              {result.tracking_info && (
+                <div className="grid grid-cols-2 gap-4 pt-3 border-t border-gray-200">
+                  <div>
+                    <span className="font-medium text-gray-900">Request ID:</span>
+                    <p className="text-gray-600">#{result.tracking_info.request_id}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-900">Processing node:</span>
+                    <p className="text-gray-600">{result.tracking_info.processing_node}</p>
+                  </div>
+                </div>
+              )}
+
+              {result.probabilities && (
+                <div className="pt-3 border-t border-gray-200">
+                  <span className="font-medium text-gray-900">Raw Probabilities:</span>
+                  <p className="text-gray-600">Real: {result.probabilities.real}%, Fake: {result.probabilities.fake}%</p>
+                </div>
+              )}
+
               {systemHealth?.ensemble_info && (
-                <div className="border-t border-white/10 pt-4">
-                  <h4 className="text-white font-medium mb-3">Ensemble System Status</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-gray-800/30 rounded p-3">
-                      <div className="text-sm text-gray-400 mb-1">Loaded Models</div>
-                      <div className="text-green-400 font-bold">{systemHealth.ensemble_info.total_loaded}</div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {(systemHealth.ensemble_info.loaded_models ?? []).join(', ')}
-                      </div>
+                <div className="pt-3 border-t border-gray-200">
+                  <span className="font-medium text-gray-900">Ensemble System Status</span>
+                  <div className="mt-2 grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-gray-900">Loaded Models: {systemHealth.ensemble_info.total_loaded}</p>
+                      <p className="text-gray-600 text-xs">{(systemHealth.ensemble_info.loaded_models ?? []).join(', ')}</p>
                     </div>
-                    <div className="bg-gray-800/30 rounded p-3">
-                      <div className="text-sm text-gray-400 mb-1">Failed Models</div>
-                      <div className="text-red-400 font-bold">{systemHealth.ensemble_info.total_failed}</div>
+                    <div>
+                      <p className="text-gray-900">Failed Models: {systemHealth.ensemble_info.total_failed}</p>
                       {(systemHealth.ensemble_info.failed_models ?? []).length > 0 && (
-                        <div className="text-xs text-gray-500 mt-1">
-                          {(systemHealth.ensemble_info.failed_models ?? []).join(', ')}
-                        </div>
+                        <p className="text-gray-600 text-xs">{(systemHealth.ensemble_info.failed_models ?? []).join(', ')}</p>
                       )}
                     </div>
                   </div>

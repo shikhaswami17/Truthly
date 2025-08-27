@@ -5,7 +5,6 @@ import TruthlyApp from './components/TruthlyApp';
 import DynamicResult from './components/DynamicResult';
 import './styles/index.css';
 
-
 function App() {
   return (
     <Router>
@@ -17,15 +16,24 @@ function App() {
   );
 }
 
-
 // Wrapper to pass props from location state
 import { useLocation, useNavigate } from 'react-router-dom';
+
 function DynamicResultWrapper() {
   const location = useLocation();
   const navigate = useNavigate();
   const { searchUrl } = location.state || {};
+
+  if (!searchUrl) {
+    navigate('/');
+    return null;
+  }
+
   return (
-    <DynamicResult searchUrl={searchUrl} onBack={() => navigate('/')} />
+    <DynamicResult 
+      searchUrl={searchUrl} 
+      onBack={() => navigate('/')} 
+    />
   );
 }
 
