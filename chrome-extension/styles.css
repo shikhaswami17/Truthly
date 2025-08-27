@@ -1,0 +1,211 @@
+/* Fact Check Assistant - Chrome Extension Styles */
+
+.fact-check-loading,
+.fact-check-badge {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  margin: 4px 0;
+  font-size: 12px;
+  line-height: 1.2;
+  z-index: 1000;
+  position: relative;
+}
+
+.fact-check-loading .loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background: #f8f9fa;
+  border: 1px solid #e1e3e6;
+  border-radius: 12px;
+  color: #5f6368;
+  opacity: 0.8;
+}
+
+.loading-spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid #e1e3e6;
+  border-top: 2px solid #4285f4;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.fact-check-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0;
+  transform: translateY(4px);
+  font-weight: 500;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  border: 1px solid transparent;
+}
+
+.fact-check-badge.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.fact-check-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+/* Trustworthy badges */
+.fact-check-badge.trustworthy-high {
+  background: linear-gradient(135deg, #e8f5e8 0%, #d4f1d4 100%);
+  border-color: #34a853;
+  color: #137333;
+}
+
+.fact-check-badge.trustworthy-high:hover {
+  background: linear-gradient(135deg, #d4f1d4 0%, #c8e6c8 100%);
+}
+
+.fact-check-badge.trustworthy-medium {
+  background: linear-gradient(135deg, #e8f5e8 0%, #ddeedd 100%);
+  border-color: #5bb85b;
+  color: #2d5a2d;
+}
+
+.fact-check-badge.trustworthy-medium:hover {
+  background: linear-gradient(135deg, #ddeedd 0%, #d1e7d1 100%);
+}
+
+/* Untrustworthy badges */
+.fact-check-badge.untrustworthy-high {
+  background: linear-gradient(135deg, #fce8e6 0%, #f8d7da 100%);
+  border-color: #ea4335;
+  color: #c5221f;
+}
+
+.fact-check-badge.untrustworthy-high:hover {
+  background: linear-gradient(135deg, #f8d7da 0%, #f5c2c7 100%);
+}
+
+.fact-check-badge.untrustworthy-medium {
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  border-color: #ff9800;
+  color: #b8860b;
+}
+
+.fact-check-badge.untrustworthy-medium:hover {
+  background: linear-gradient(135deg, #ffeaa7 0%, #ffe082 100%);
+}
+
+/* Neutral badge */
+.fact-check-badge.neutral {
+  background: linear-gradient(135deg, #f5f5f5 0%, #eeeeee 100%);
+  border-color: #9aa0a6;
+  color: #5f6368;
+}
+
+.fact-check-badge.neutral:hover {
+  background: linear-gradient(135deg, #eeeeee 0%, #e8e8e8 100%);
+}
+
+/* Badge elements */
+.badge-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.badge-text {
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.badge-confidence {
+  font-size: 10px;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+.badge-arrow {
+  font-size: 10px;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.fact-check-badge:hover .badge-arrow {
+  opacity: 1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .fact-check-badge {
+    padding: 2px 6px;
+    font-size: 11px;
+  }
+  
+  .badge-icon {
+    font-size: 12px;
+  }
+  
+  .badge-text {
+    font-size: 10px;
+  }
+  
+  .badge-confidence {
+    font-size: 9px;
+  }
+}
+
+/* Animation for new badges */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fact-check-badge.visible {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+/* Accessibility improvements */
+.fact-check-badge:focus {
+  outline: 2px solid #4285f4;
+  outline-offset: 1px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .fact-check-badge.trustworthy-high {
+    background: #e8f5e8;
+    border-color: #2d5a2d;
+    color: #1a5e1a;
+  }
+  
+  .fact-check-badge.untrustworthy-high {
+    background: #fce8e6;
+    border-color: #d32f2f;
+    color: #b71c1c;
+  }
+}
+
+/* Print styles */
+@media print {
+  .fact-check-badge {
+    background: white !important;
+    border: 1px solid #ccc !important;
+    color: #333 !important;
+    box-shadow: none !important;
+  }
+}

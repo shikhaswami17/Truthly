@@ -5,6 +5,7 @@ import TruthlyApp from './components/TruthlyApp';
 import DynamicResult from './components/DynamicResult';
 import './styles/index.css';
 
+
 function App() {
   return (
     <Router>
@@ -15,6 +16,7 @@ function App() {
     </Router>
   );
 }
+
 
 // Wrapper to pass props from location state
 import { useLocation, useNavigate } from 'react-router-dom';

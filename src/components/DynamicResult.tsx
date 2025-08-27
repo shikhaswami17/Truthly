@@ -93,6 +93,7 @@ const DynamicResult: React.FC<DynamicResultProps> = ({ searchUrl, onBack }) => {
   const [lastAnalyzedUrl, setLastAnalyzedUrl] = useState<string | null>(null); // Add this
 
   useEffect(() => {
+    
     // Prevent duplicate analysis of same URL
     if (searchUrl !== lastAnalyzedUrl) {
       analyzeUrl();
