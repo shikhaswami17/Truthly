@@ -1012,7 +1012,14 @@ if __name__ == '__main__':
         logger.info(f"🔧 Key features: Detailed justifying summaries + Multi-model analysis")
     else:
         logger.warning("⚠️ No models or APIs loaded. Service will have limited functionality.")
-    
+   
+
     logger.info(f"🌐 Starting Flask server on http://localhost:5001")
+<<<<<<< HEAD
+
     app.run(host='0.0.0.0', port=5001, debug=True)
                             
+=======
+    app.run(host='0.0.0.0', port=5001, debug=True)
+                            
+>>>>>>> 8937d1d (Revert "UI improved")
