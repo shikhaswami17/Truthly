@@ -294,15 +294,16 @@ class EnhancedMultiAPIEnsemble:
                 'summary': summary,
                 'reasoning': full_reasoning,
                 'analysis_details': {
-                    'trust_indicators_found': trust_score,
-                    'suspicious_indicators_found': suspicion_score,
-                    'has_sources': has_sources,
-                    'structure_quality': has_good_structure,
-                    'net_credibility_score': net_score,
-                    'word_count': word_count,
-                    'found_trust_indicators': found_trust[:5],
-                    'found_suspicious_indicators': found_suspicious[:3]
-                }
+                        'trust_indicators_found': trust_score,
+                        'suspicious_indicators_found': suspicion_score,
+                        'has_sources': has_sources,
+                        'structure_quality': has_good_structure,
+                        'net_credibility_score': net_score,
+                        'word_count': word_count,
+                        'found_trust_indicators': found_trust[:5],      # ✅ ACTUAL INDICATORS FOUND
+                        'found_suspicious_indicators': found_suspicious[:3], # ✅ ACTUAL SUSPICIOUS ELEMENTS
+                        'sentence_count': len(sentences)
+                                }
             }
             
         except Exception as e:
