@@ -11,14 +11,14 @@ point of discovery.
 
 ## Architecture
 React Frontend → Node/Express Backend → Flask ML Service → 
-External APIs (OpenAI, Groq, Google Search)
+External APIs (Google Search)
 
 ## Tech Stack
 - Frontend: React 18, TypeScript, Webpack 5, Tailwind CSS
 - Backend: Node.js, Express, node-cron
 - ML Service: Python, Flask, PyTorch, Hugging Face Transformers,
   sentence-transformers, spaCy, NLTK, BeautifulSoup
-- APIs: OpenAI GPT, Groq, Google Search (Serper)
+- APIs: Google Search (Serper)
 
 ## Features
 - Chrome extension labels search results as credible/not in real time
@@ -36,6 +36,3 @@ External APIs (OpenAI, Groq, Google Search)
    - Claim verification (OpenAI / Groq)
 4. Credibility score + reasoning returned to extension
 
-## Achievement
-Built at Nexothon 2025 — Top 5 out of 350+ teams
-Only second-year team among 29 finalists
