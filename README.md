@@ -25,7 +25,7 @@ React frontend → Node/Express → Flask ML service → APIs
 - Backend: Node.js, Express
 - ML: Python, Flask, PyTorch, Hugging Face Transformers,
   sentence-transformers, spaCy, NLTK
-- APIs: OpenAI, Groq, Serper (Google Search)
+- APIs: Serper, Hugging Face Inference API
 
 ## Honest limitations
 The reasoning quality depends on the LLM.
